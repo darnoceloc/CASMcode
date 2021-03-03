@@ -158,42 +158,48 @@ namespace CASM {
   }
 
     /// \brief Propose a new event, calculate delta properties, and return reference to it
-    /// <- Zeyu: This is different from GrandCanonical.cc, under construction......
+    /// <- Conrad: This is different from GrandCanonical.cc, under construction......
     const ChargeNeutralGrandCanonical::EventType &ChargeNeutralGrandCanonical::propose(){
-        Index random_variable_site_1,random_variable_site_2;
-        Index mutating_site_1,mutating_site_2;
-        Index sublat_1,sublat_2;
-        int current_occupant_1,current_occupant_2;
-	      int n_Na = 8;
+        Index random_variable_site_1,random_variable_site_2, random_variable_site_3;
+        Index mutating_site_1,mutating_site_2,mutating_site_3;
+        Index sublat_1,sublat_2,sublat_3;
+        int current_occupant_1,current_occupant_2,current_occupant_3;
         
-        // Zeyu: 2 mutations at the same time; pick one Na/Va and one Si/P with the same occupancy and flip them together
+        // Conrad: 3 mutations at the same time; pick two Ce4/Ce3 and one O/Va with the same occupancy and flip them together
         do{
           // Randomly pick a site that's allowed more than one occupant
           random_variable_site_1 = _mtrand().randInt(m_site_swaps.variable_sites().size() - 1);
           random_variable_site_2 = _mtrand().randInt(m_site_swaps.variable_sites().size() - 1);
+	  random_variable_site_3 = _mtrand().randInt(m_site_swaps.variable_sites().size() - 1);
 
         // Determine what that site's linear index is and what the sublattice index is
           mutating_site_1 = m_site_swaps.variable_sites()[random_variable_site_1];
           mutating_site_2 = m_site_swaps.variable_sites()[random_variable_site_2];
+	  mutating_site_3 = m_site_swaps.variable_sites()[random_variable_site_3];
 
           sublat_1 = m_site_swaps.sublat()[random_variable_site_1];
           sublat_2 = m_site_swaps.sublat()[random_variable_site_2];
+	  sublat_3 = m_site_swaps.sublat()[random_variable_site_3];
       
           // Determine the current occupant of the mutating site
           current_occupant_1 = configdof().occ(mutating_site_1);
           current_occupant_2 = configdof().occ(mutating_site_2);
+	  current_occupant_3 = configdof().occ(mutating_site_3);
         }
-        while (!(((sublat_1 <= n_Na && sublat_2 > n_Na) || (sublat_1 > n_Na && sublat_2 <= n_Na)) && (current_occupant_1 == current_occupant_2)));
+        while (!((sublat_1 == sublat_2  && sublat_3 != sublat_1) && (current_occupant_1 == current_occupant_3) && (current_occupant_2 == current_occupant_3))) ;
 
         // Randomly pick a new occupant for the mutating site
         const std::vector<int> &possible_mutation_1 = m_site_swaps.possible_swap()[sublat_1][current_occupant_1];
         int new_occupant_1 = possible_mutation_1[_mtrand().randInt(possible_mutation_1.size() - 1)];
         const std::vector<int> &possible_mutation_2 = m_site_swaps.possible_swap()[sublat_2][current_occupant_2];
         int new_occupant_2 = possible_mutation_2[_mtrand().randInt(possible_mutation_2.size() - 1)];
+	const std::vector<int> &possible_mutation_3 = m_site_swaps.possible_swap()[sublat_3][current_occupant_3];
+        int new_occupant_3 = possible_mutation_3[_mtrand().randInt(possible_mutation_3.size() - 1)];
 
         if(debug()) {
           const auto &site_occ_1 = primclex().get_prim().basis[sublat_1].site_occupant();
           const auto &site_occ_2 = primclex().get_prim().basis[sublat_2].site_occupant();
+	  const auto &site_occ_3 = primclex().get_prim().basis[sublat_3].site_occupant();
           _log().custom("Propose charge neutral grand canonical event");
 
           _log()  << "  Mutating site 1 (linear index): " << mutating_site_1 << "\n"
@@ -207,16 +213,22 @@ namespace CASM {
                   << "  Mutating site (b, i, j, k): " << supercell().uccoord(mutating_site_2) << "\n"
                   << "  Current occupant: " << current_occupant_2 << " (" << site_occ_2[current_occupant_2].name << ")\n"
                   << "  Proposed occupant: " << new_occupant_2 << " (" << site_occ_2[new_occupant_2].name << ")\n\n"
+		  
+		  << "  Mutating site 3 (linear index): " << mutating_site_3 << "\n"
+                  << "  Sublattice: "<< sublat_3<<"\n"
+                  << "  Mutating site (b, i, j, k): " << supercell().uccoord(mutating_site_3) << "\n"
+                  << "  Current occupant: " << current_occupant_3 << " (" << site_occ_3[current_occupant_3].name << ")\n"
+                  << "  Proposed occupant: " << new_occupant_3 << " (" << site_occ_3[new_occupant_3].name << ")\n\n"
 
                   << "  beta: " << m_condition.beta() << "\n"
                   << "  T: " << m_condition.temperature() << std::endl;
         }
 
-        // Zeyu: creating pairs
-        std::pair<Index,Index> mutating_sites (mutating_site_1,mutating_site_2);
-        std::pair<Index,Index> sublats (sublat_1,sublat_2);
-        std::pair<int,int> current_occupants (current_occupant_1,current_occupant_1);
-        std::pair<int,int> new_occupants (new_occupant_1,new_occupant_2);
+        // Zeyu: creating triplets
+        std::vector<Index> mutating_sites (mutating_site_1,mutating_site_2,mutating_site_3);
+        std::vector<Index> sublats (sublat_1,sublat_2,sublat_3);
+        std::vector<int> current_occupants (current_occupant_1,current_occupant_2,current_occupant_3);
+        std::vector<int> new_occupants (new_occupant_1,new_occupant_2,new_occupant_3);
 
         // Update delta properties in m_event
         // Zeyu: Pairs are passing into _update_deltas()
@@ -376,19 +388,24 @@ namespace CASM {
         Index mutating_site_2 = site_exch.variable_sites()[exch_ind_2];
         int sublat_2 = site_exch.sublat()[exch_ind_2];
         int current_occupant_2 = config_dof.occ(mutating_site_2);
+	      
+	Index mutating_site_3 = site_exch.variable_sites()[exch_ind_3];
+        int sublat_3 = site_exch.sublat()[exch_ind_3];
+        int current_occupant_3 = config_dof.occ(mutating_site_3);
 
-        if ((((sublat_1 <= n_Na && sublat_2 > n_Na) || (sublat_1 > n_Na && sublat_2 <= n_Na)) && (current_occupant_1 == current_occupant_2))){
+        if (((sublat_1 == sublat_2  && sublat_3 != sublat_1) && (current_occupant_1 == current_occupant_3) && (current_occupant_2 == current_occupant_3))) ;{
           //Loop over possible occupants for site that can change
           const auto &possible_1 = site_exch.possible_swap()[sublat_1][current_occupant_1];
           const auto &possible_2 = site_exch.possible_swap()[sublat_2][current_occupant_2];
+	  const auto &possible_3 = site_exch.possible_swap()[sublat_3][current_occupant_3];
           for(auto new_occ_it_1 = possible_1.begin(); new_occ_it_1 != possible_1.end(); ++new_occ_it_1) {
             for(auto new_occ_it_2 = possible_2.begin(); new_occ_it_2 != possible_2.end(); ++new_occ_it_2) {
 
-              // Zeyu: creating pairs
-              std::pair<Index,Index> mutating_sites (mutating_site_1,mutating_site_2);
-              std::pair<Index,Index> sublats (sublat_1,sublat_2);
-              std::pair<int,int> current_occupants (current_occupant_1,current_occupant_1);
-              std::pair<int,int> new_occ_its (*new_occ_it_1,*new_occ_it_2);
+              // Conrad: creating pairs
+              std::vector<Index> mutating_sites (mutating_site_1,mutating_site_2,mutating_site_3);
+	      std::vector<Index> sublats (sublat_1,sublat_2,sublat_3);
+              std::vector<int> current_occupants (current_occupant_1,current_occupant_2,current_occupant_3);
+              std::vector<int> new_occupants (new_occupant_1,new_occupant_2,new_occupant_3);
 
               _update_deltas(event, mutating_sites, sublats, current_occupants, new_occ_its);
 

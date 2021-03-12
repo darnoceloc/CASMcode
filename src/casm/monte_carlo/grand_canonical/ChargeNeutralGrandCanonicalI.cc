@@ -164,6 +164,7 @@ namespace CASM {
         Index mutating_site_1,mutating_site_2,mutating_site_3;
         Index sublat_1,sublat_2,sublat_3;
         int current_occupant_1,current_occupant_2,current_occupant_3;
+	    int nCe4 = 1;
         
         // Conrad: 3 mutations at the same time; pick two Ce4/Ce3 and one O/Va with the same occupancy and flip them together
         do{
@@ -186,7 +187,7 @@ namespace CASM {
           current_occupant_2 = configdof().occ(mutating_site_2);
 	  current_occupant_3 = configdof().occ(mutating_site_3);
         }
-        while (!((sublat_1 == sublat_2  && sublat_3 != sublat_1) && (current_occupant_1 == current_occupant_3) && (current_occupant_2 == current_occupant_3))) ;
+        while (!((current_occupant_1 == current_occupant_2 && current_occupant_2 == current_occupant_3) &&( (sublat_1 < n_Ce && sublat_2 < n_Ce && sublat_3>n_Ce) || (sublat_1 < n_Ce && sublat_2>n_Ce && sublat_3<n_Ce) || (sublat_1>n_Ce && sublat_2<n_Ce && sublat_3<n_Ce))) ;
 
         // Randomly pick a new occupant for the mutating site
         const std::vector<int> &possible_mutation_1 = m_site_swaps.possible_swap()[sublat_1][current_occupant_1];
@@ -245,6 +246,8 @@ namespace CASM {
           Index new_species_1 = m_site_swaps.sublat_to_mol()[sublat_1][new_occupant_1];
           Index curr_species_2 = m_site_swaps.sublat_to_mol()[sublat_2][current_occupant_2];
           Index new_species_2 = m_site_swaps.sublat_to_mol()[sublat_2][new_occupant_2];
+	  Index curr_species_3 = m_site_swaps.sublat_to_mol()[sublat_3][current_occupant_3];
+          Index new_species_3 = m_site_swaps.sublat_to_mol()[sublat_3][new_occupant_3];
 
           _log() << "  components: " << jsonParser(primclex().composition_axes().components()) << "\n"
                  << "  d(N1): " << m_event.dN().first.transpose() << "\n"
@@ -256,6 +259,9 @@ namespace CASM {
 
 
                  << "Swap step 2: d(Nunit * param_chem_pot * x): " << exchange_chem_pot(new_species_2, curr_species_2) << "\n"
+		  
+		 << "Swap step 3: d(Nunit * param_chem_pot * x): " << exchange_chem_pot(new_species_3, curr_species_3) << "\n"
+
 
                  << "  d(Ef2): " << m_event.dEf().second << "\n"
                  << "  d(Epot2): " << m_event.dEf().second - exchange_chem_pot(new_species_2, curr_species_2) << "\n"
@@ -376,9 +382,10 @@ namespace CASM {
     // double sum_exp = 0.0;
 
     //Loop over sites that can change occupants
-    int n_Na = 8;
+    int n_Ce4 = 1;
     for(Index exch_ind_1 = 0; exch_ind_1 < site_exch.variable_sites().size(); exch_ind_1++) {
       for(Index exch_ind_2 = 0; exch_ind_2 < site_exch.variable_sites().size(); exch_ind_2++) {
+	  for(Index exch_ind_2 = 0; exch_ind_2 < site_exch.variable_sites().size(); exch_ind_2++) {
 
         //Transform exchanger index to ConfigDoF index
         Index mutating_site_1 = site_exch.variable_sites()[exch_ind_1];
@@ -393,13 +400,14 @@ namespace CASM {
         int sublat_3 = site_exch.sublat()[exch_ind_3];
         int current_occupant_3 = config_dof.occ(mutating_site_3);
 
-        if (((sublat_1 == sublat_2  && sublat_3 != sublat_1) && (current_occupant_1 == current_occupant_3) && (current_occupant_2 == current_occupant_3))) ;{
+        if (((current_occupant_1 == current_occupant_2 && current_occupant_2 == current_occupant_3) &&( (sublat_1 < n_Ce && sublat_2 < n_Ce && sublat_3>n_Ce) || (sublat_1 < n_Ce && sublat_2>n_Ce && sublat_3<n_Ce) || (sublat_1>n_Ce && sublat_2<n_Ce && sublat_3<n_Ce))) ;{
           //Loop over possible occupants for site that can change
           const auto &possible_1 = site_exch.possible_swap()[sublat_1][current_occupant_1];
           const auto &possible_2 = site_exch.possible_swap()[sublat_2][current_occupant_2];
 	  const auto &possible_3 = site_exch.possible_swap()[sublat_3][current_occupant_3];
           for(auto new_occ_it_1 = possible_1.begin(); new_occ_it_1 != possible_1.end(); ++new_occ_it_1) {
             for(auto new_occ_it_2 = possible_2.begin(); new_occ_it_2 != possible_2.end(); ++new_occ_it_2) {
+	        for(auto new_occ_it_3 = possible_3.begin(); new_occ_it_3 != possible_3.end(); ++new_occ_it_3) {
 
               // Conrad: creating pairs
               std::vector<Index> mutating_sites (mutating_site_1,mutating_site_2,mutating_site_3);
@@ -427,9 +435,11 @@ namespace CASM {
               else {
                 it->second++;
               }
+	     }
             }
           }
         }
+       }
       }
     }
 
@@ -651,28 +661,28 @@ namespace CASM {
     /// do this site by site and then calculate total dEpot and store in ChargeNeutralGrandCanonicalEvent
     /// and use it to for check()
 	void ChargeNeutralGrandCanonical::_update_deltas(EventType &event, 
-						std::pair<Index,Index> &mutating_sites,
-						std::pair<Index,Index> &sublats,
-						std::pair<int,int> &curr_occs,
-						std::pair<int,int> &new_occs) const{
+						std::vector<Index> &mutating_sites,
+						std::vector<Index> &sublats,
+						std::vector<int> &curr_occs,
+						std::vectpr<int> &new_occs) const{
         // reset the flag
         event.set_is_swapped(false);
 
         // Site 1
         // ---- set OccMod --------------
-        event.occupational_change().first.set(mutating_sites.first, sublats.first, new_occs.first);
+        event.occupational_change().first.set(mutating_sites[0], sublats[0], new_occs[0]);
 
         // ---- set dspecies --------------
         for(int i = 0; i < event.dN().first.size(); ++i) {
           event.set_dN(i, 0);
         }
-        Index curr_species_1 = m_site_swaps.sublat_to_mol()[sublats.first][curr_occs.first];
-        Index new_species_1 = m_site_swaps.sublat_to_mol()[sublats.first][new_occs.first];
+        Index curr_species_1 = m_site_swaps.sublat_to_mol()[sublats[0]][curr_occs[0]];
+        Index new_species_1 = m_site_swaps.sublat_to_mol()[sublats[0]][new_occs[0]];
         event.set_dN(curr_species_1, -1);
         event.set_dN(new_species_1, 1);
 
         // ---- set dcorr --------------
-        _set_dCorr(event, mutating_sites.first, sublats.first, curr_occs.first, new_occs.first, m_use_deltas, m_all_correlations); // Zeyu: Shall we rewrite _set_dCorr?
+        _set_dCorr(event, mutating_sites[0], sublats[0], curr_occs[0], new_occs[0], m_use_deltas, m_all_correlations); // Zeyu: Shall we rewrite _set_dCorr?
 
         // ---- set dformation_energy --------------
         event.set_dEf(_eci() * event.dCorr().first.data());
@@ -688,17 +698,17 @@ namespace CASM {
         event.set_is_swapped(true);
         // Site 2
         // ---- set OccMod --------------
-        event.occupational_change().second.set(mutating_sites.second, sublats.second, new_occs.second);
+        event.occupational_change().second.set(mutating_sites[1], sublats[1], new_occs[1]);
         // ---- set dspecies --------------
         for(int i = 0; i < event.dN().first.size(); ++i) {
           event.set_dN(i, 0);
         }
-        Index curr_species_2 = m_site_swaps.sublat_to_mol()[sublats.second][curr_occs.second];
-        Index new_species_2 = m_site_swaps.sublat_to_mol()[sublats.second][new_occs.second];
+        Index curr_species_2 = m_site_swaps.sublat_to_mol()[sublats[1]][curr_occs[1]];
+        Index new_species_2 = m_site_swaps.sublat_to_mol()[sublats[1]][new_occs[1]];
         event.set_dN(curr_species_2, -1);
         event.set_dN(new_species_2, 1);
         // ---- set dcorr --------------
-        _set_dCorr(event, mutating_sites.second, sublats.second, curr_occs.second, new_occs.second, m_use_deltas, m_all_correlations);
+        _set_dCorr(event, mutating_sites[1], sublats[1], curr_occs[1], new_occs[1], m_use_deltas, m_all_correlations);
         // ---- set dformation_energy --------------
         event.set_dEf(_eci() * event.dCorr().second.data());
         // ---- set dpotential_energy --------------
@@ -706,6 +716,30 @@ namespace CASM {
         event.set_dEpot(dEpot_2);
         // Calculate dEpot after two swaps
         event.set_dEpot_swapped_twice(dEpot_1+dEpot_2);
+        // Zeyu: after get dEpot_swapped_twice, change configuration back to origin....
+        _configdof().occ(event.occupational_change().first.site_index()) = event.original_occ_first_swap();
+        event.set_is_swapped(false);
+		
+	 // Site 3
+        // ---- set OccMod --------------
+        event.occupational_change().second.set(mutating_sites[2], sublats[2], new_occs[2]);
+        // ---- set dspecies --------------
+        for(int i = 0; i < event.dN().first.size(); ++i) {
+          event.set_dN(i, 0);
+        }
+        Index curr_species_2 = m_site_swaps.sublat_to_mol()[sublats[2]][curr_occs[2]];
+        Index new_species_2 = m_site_swaps.sublat_to_mol()[sublats[2]][new_occs[2]];
+        event.set_dN(curr_species_2, -1);
+        event.set_dN(new_species_2, 1);
+        // ---- set dcorr --------------
+        _set_dCorr(event, mutating_sites[2], sublats[2], curr_occs[2], new_occs[2], m_use_deltas, m_all_correlations);
+        // ---- set dformation_energy --------------
+        event.set_dEf(_eci() * event.dCorr().second.data());
+        // ---- set dpotential_energy --------------
+        double dEpot_3 = event.dEf().second - m_condition.exchange_chem_pot(new_species_3, curr_species_3);
+        event.set_dEpot(dEpot_3);
+        // Calculate dEpot after two swaps
+        event.set_dEpot_swapped_twice(dEpot_1+dEpot_2+dEpot_3);
         // Zeyu: after get dEpot_swapped_twice, change configuration back to origin....
         _configdof().occ(event.occupational_change().first.site_index()) = event.original_occ_first_swap();
         event.set_is_swapped(false);

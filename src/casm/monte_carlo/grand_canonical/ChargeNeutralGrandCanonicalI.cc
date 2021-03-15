@@ -164,7 +164,7 @@ namespace CASM {
         Index mutating_site_1,mutating_site_2,mutating_site_3;
         Index sublat_1,sublat_2,sublat_3;
         int current_occupant_1,current_occupant_2,current_occupant_3;
-	    int nCe4 = 1;
+	    int nCe = 1;
         
         // Conrad: 3 mutations at the same time; pick two Ce4/Ce3 and one O/Va with the same occupancy and flip them together
         do{
@@ -187,7 +187,7 @@ namespace CASM {
           current_occupant_2 = configdof().occ(mutating_site_2);
 	  current_occupant_3 = configdof().occ(mutating_site_3);
         }
-        while (!((current_occupant_1 == current_occupant_2 && current_occupant_2 == current_occupant_3) &&( (sublat_1 < n_Ce && sublat_2 < n_Ce && sublat_3>n_Ce) || (sublat_1 < n_Ce && sublat_2>n_Ce && sublat_3<n_Ce) || (sublat_1>n_Ce && sublat_2<n_Ce && sublat_3<n_Ce))) ;
+        while (!((current_occupant_1 == current_occupant_2 && current_occupant_2 == current_occupant_3) && ((sublat_1 < n_Ce && sublat_2 < n_Ce && sublat_3 >= n_Ce) || (sublat_1 < n_Ce && sublat_2 >= n_Ce && sublat_3 < n_Ce) || (sublat_1 >= n_Ce && sublat_2 < n_Ce && sublat_3 < n_Ce))) ;
 
         // Randomly pick a new occupant for the mutating site
         const std::vector<int> &possible_mutation_1 = m_site_swaps.possible_swap()[sublat_1][current_occupant_1];
@@ -225,7 +225,7 @@ namespace CASM {
                   << "  T: " << m_condition.temperature() << std::endl;
         }
 
-        // Zeyu: creating triplets
+        // Conrad: creating triplets
         std::vector<Index> mutating_sites (mutating_site_1,mutating_site_2,mutating_site_3);
         std::vector<Index> sublats (sublat_1,sublat_2,sublat_3);
         std::vector<int> current_occupants (current_occupant_1,current_occupant_2,current_occupant_3);
@@ -257,11 +257,9 @@ namespace CASM {
                  << "    param_chem_pot.transpose() * dx_dn * dN: " << param_chem_pot.transpose()*Mpinv *m_event.dN().first.cast<double>() << "\n"
                  << "Swap step 1: d(Nunit * param_chem_pot * x): " << exchange_chem_pot(new_species_1, curr_species_1) << "\n"
 
-
                  << "Swap step 2: d(Nunit * param_chem_pot * x): " << exchange_chem_pot(new_species_2, curr_species_2) << "\n"
 		  
 		 << "Swap step 3: d(Nunit * param_chem_pot * x): " << exchange_chem_pot(new_species_3, curr_species_3) << "\n"
-
 
                  << "  d(Ef2): " << m_event.dEf().second << "\n"
                  << "  d(Epot2): " << m_event.dEf().second - exchange_chem_pot(new_species_2, curr_species_2) << "\n"
@@ -306,18 +304,23 @@ namespace CASM {
         }
 
         // First apply changes to configuration (just a single occupant change)
-        _configdof().occ(event.occupational_change().first.site_index()) = event.occupational_change().first.to_value();
-        _configdof().occ(event.occupational_change().second.site_index()) = event.occupational_change().second.to_value();
+        _configdof().occ(event.occupational_change()[0].site_index()) = event.occupational_change()[0].to_value();
+        _configdof().occ(event.occupational_change()[1].site_index()) = event.occupational_change()[1].to_value();
+	_configdof().occ(event.occupational_change()[2].site_index()) = event.occupational_change()[2].to_value();
 
         // Next update all properties that changed from the event // Zeyu: update twice, the volume does not change throughout the simulation
-        _formation_energy() += event.dEf().first / supercell().volume();
-        _formation_energy() += event.dEf().second / supercell().volume();
-        _potential_energy() += event.dEpot().first / supercell().volume();
-        _potential_energy() += event.dEpot().second / supercell().volume();
-        _corr() += event.dCorr().first / supercell().volume();
-        _corr() += event.dCorr().second / supercell().volume();
-        _comp_n() += event.dN().first.cast<double>() / supercell().volume();
-        _comp_n() += event.dN().second.cast<double>() / supercell().volume();
+        _formation_energy() += event.dEf()[0] / supercell().volume();
+        _formation_energy() += event.dEf()[1] / supercell().volume();
+	_formation_energy() += event.dEf()[2] / supercell().volume();
+        _potential_energy() += event.dEpot()[0] / supercell().volume();
+        _potential_energy() += event.dEpot()[1] / supercell().volume();
+	_potential_energy() += event.dEpot()[2] / supercell().volume();
+        _corr() += event.dCorr()[0] / supercell().volume();
+        _corr() += event.dCorr()[1] / supercell().volume();
+	_corr() += event.dCorr()[2] / supercell().volume();
+        _comp_n() += event.dN()[0].cast<double>() / supercell().volume();
+        _comp_n() += event.dN()[1].cast<double>() / supercell().volume();
+        _comp_n() += event.dN()[2].cast<double>() / supercell().volume();
 
         return;
     }
@@ -332,32 +335,6 @@ namespace CASM {
         return;
     }
 
-  /// \brief Calculate the single spin flip low temperature expansion of the grand canonical potential
-  ///
-  /// Returns low temperature expansion estimate of the grand canonical free energy.
-  /// Works with the current ConfigDoF as groundstate.
-  ///
-  /// Quick derivation:
-  /// Z: partition function
-  /// boltz(x): exp(-x/kBT)
-  /// \Omega: (E-SUM(chem_pot*comp_n))*N
-  /// N: number of unit cells in supercell
-  ///
-  /// The partition function is
-  /// Z=SUM(boltz(\Omega_s))    summing over all microstates s
-  ///
-  /// \Omega_s can be split into groundstate \Omega_0 and a delta energy D\Omega
-  /// \Omega_s=\Omega_0+D\Omega_s
-  /// Z=boltz(\Omega_0)*SUM(boltz(D\Omega_s))  summing over all microstates
-  ///
-  /// For low temperatures we can approximate Z by truncating the sum after microstates that
-  /// only involve point defects and no defects
-  /// Z=boltz(\Omega_0)*SUM(boltz(D\Omega_s))  summing over all states with only point defects or no defects
-  ///
-  /// The free energy is
-  /// Phi=-kB*T*ln(Z)
-  /// Phi=-kB*T*(-\Omega_0/kBT+ln(SUM(boltz(D\Omega_s))    Sum is over point defects and no defects (in which case D\Omega_s == 0)
-  /// Phi=(\Omega_0-kB*T(ln(SUM(boltz(D\Omega_s)))))/N
   ///
   double ChargeNeutralGrandCanonical::lte_grand_canonical_free_energy() const {
   // Zeyu: Everytime it will select 2 sites, and evaluate their energies when flip them, so it's a 2 flip instead of single-flip LTE
@@ -385,7 +362,7 @@ namespace CASM {
     int n_Ce4 = 1;
     for(Index exch_ind_1 = 0; exch_ind_1 < site_exch.variable_sites().size(); exch_ind_1++) {
       for(Index exch_ind_2 = 0; exch_ind_2 < site_exch.variable_sites().size(); exch_ind_2++) {
-	  for(Index exch_ind_2 = 0; exch_ind_2 < site_exch.variable_sites().size(); exch_ind_2++) {
+	  for(Index exch_ind_3 = 0; exch_ind_3 < site_exch.variable_sites().size(); exch_ind_3++) {
 
         //Transform exchanger index to ConfigDoF index
         Index mutating_site_1 = site_exch.variable_sites()[exch_ind_1];
@@ -664,16 +641,16 @@ namespace CASM {
 						std::vector<Index> &mutating_sites,
 						std::vector<Index> &sublats,
 						std::vector<int> &curr_occs,
-						std::vectpr<int> &new_occs) const{
+						std::vector<int> &new_occs) const{
         // reset the flag
         event.set_is_swapped(false);
 
         // Site 1
         // ---- set OccMod --------------
-        event.occupational_change().first.set(mutating_sites[0], sublats[0], new_occs[0]);
+        event.occupational_change()[0].set(mutating_sites[0], sublats[0], new_occs[0]);
 
         // ---- set dspecies --------------
-        for(int i = 0; i < event.dN().first.size(); ++i) {
+        for(int i = 0; i < event.dN()[0].size(); ++i) {
           event.set_dN(i, 0);
         }
         Index curr_species_1 = m_site_swaps.sublat_to_mol()[sublats[0]][curr_occs[0]];
@@ -685,22 +662,22 @@ namespace CASM {
         _set_dCorr(event, mutating_sites[0], sublats[0], curr_occs[0], new_occs[0], m_use_deltas, m_all_correlations); // Zeyu: Shall we rewrite _set_dCorr?
 
         // ---- set dformation_energy --------------
-        event.set_dEf(_eci() * event.dCorr().first.data());
+        event.set_dEf(_eci() * event.dCorr()[0].data());
 
         // ---- set dpotential_energy --------------
-        double dEpot_1 = event.dEf().first - m_condition.exchange_chem_pot(new_species_1, curr_species_1);
+        double dEpot_1 = event.dEf()[0] - m_condition.exchange_chem_pot(new_species_1, curr_species_1);
         event.set_dEpot(dEpot_1);
         // back up site 1 occupation
-        event.set_original_occ_first_swap(_configdof().occ(event.occupational_change().first.site_index()));
+        event.set_original_occ_first_swap(_configdof().occ(event.occupational_change()[0].site_index()));
         // // Site 1 modification finished, update configuration ....
-        _configdof().occ(event.occupational_change().first.site_index()) = event.occupational_change().first.to_value();
+        _configdof().occ(event.occupational_change()[0].site_index()) = event.occupational_change()[0].to_value();
         // mark the changes of the first site
         event.set_is_swapped(true);
         // Site 2
         // ---- set OccMod --------------
-        event.occupational_change().second.set(mutating_sites[1], sublats[1], new_occs[1]);
+        event.occupational_change()[1].set(mutating_sites[1], sublats[1], new_occs[1]);
         // ---- set dspecies --------------
-        for(int i = 0; i < event.dN().first.size(); ++i) {
+        for(int i = 0; i < event.dN()[1].size(); ++i) {
           event.set_dN(i, 0);
         }
         Index curr_species_2 = m_site_swaps.sublat_to_mol()[sublats[1]][curr_occs[1]];
@@ -712,19 +689,16 @@ namespace CASM {
         // ---- set dformation_energy --------------
         event.set_dEf(_eci() * event.dCorr().second.data());
         // ---- set dpotential_energy --------------
-        double dEpot_2 = event.dEf().second - m_condition.exchange_chem_pot(new_species_2, curr_species_2);
+        double dEpot_2 = event.dEf()[1] - m_condition.exchange_chem_pot(new_species_2, curr_species_2);
         event.set_dEpot(dEpot_2);
         // Calculate dEpot after two swaps
         event.set_dEpot_swapped_twice(dEpot_1+dEpot_2);
-        // Zeyu: after get dEpot_swapped_twice, change configuration back to origin....
-        _configdof().occ(event.occupational_change().first.site_index()) = event.original_occ_first_swap();
-        event.set_is_swapped(false);
 		
 	 // Site 3
         // ---- set OccMod --------------
         event.occupational_change().second.set(mutating_sites[2], sublats[2], new_occs[2]);
         // ---- set dspecies --------------
-        for(int i = 0; i < event.dN().first.size(); ++i) {
+        for(int i = 0; i < event.dN()[2].size(); ++i) {
           event.set_dN(i, 0);
         }
         Index curr_species_2 = m_site_swaps.sublat_to_mol()[sublats[2]][curr_occs[2]];
@@ -734,14 +708,14 @@ namespace CASM {
         // ---- set dcorr --------------
         _set_dCorr(event, mutating_sites[2], sublats[2], curr_occs[2], new_occs[2], m_use_deltas, m_all_correlations);
         // ---- set dformation_energy --------------
-        event.set_dEf(_eci() * event.dCorr().second.data());
+        event.set_dEf(_eci() * event.dCorr()[2].data());
         // ---- set dpotential_energy --------------
-        double dEpot_3 = event.dEf().second - m_condition.exchange_chem_pot(new_species_3, curr_species_3);
+        double dEpot_3 = event.dEf()[2] - m_condition.exchange_chem_pot(new_species_3, curr_species_3);
         event.set_dEpot(dEpot_3);
-        // Calculate dEpot after two swaps
+        // Calculate dEpot after three swaps
         event.set_dEpot_swapped_twice(dEpot_1+dEpot_2+dEpot_3);
         // Zeyu: after get dEpot_swapped_twice, change configuration back to origin....
-        _configdof().occ(event.occupational_change().first.site_index()) = event.original_occ_first_swap();
+        _configdof().occ(event.occupational_change()[0].site_index()) = event.original_occ_first_swap();
         event.set_is_swapped(false);
         
     }

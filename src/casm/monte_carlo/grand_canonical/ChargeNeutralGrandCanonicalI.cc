@@ -377,7 +377,7 @@ namespace CASM {
         int sublat_3 = site_exch.sublat()[exch_ind_3];
         int current_occupant_3 = config_dof.occ(mutating_site_3);
 
-        if (((current_occupant_1 == current_occupant_2 && current_occupant_2 == current_occupant_3) &&( (sublat_1 < n_Ce && sublat_2 < n_Ce && sublat_3>n_Ce) || (sublat_1 < n_Ce && sublat_2>n_Ce && sublat_3<n_Ce) || (sublat_1>n_Ce && sublat_2<n_Ce && sublat_3<n_Ce))) ;{
+        if (((current_occupant_1 == current_occupant_2 && current_occupant_2 == current_occupant_3) &&( (sublat_1 < n_Ce4 && sublat_2 < n_Ce4 && sublat_3 >= n_Ce4) || (sublat_1 < n_Ce && sublat_2 >=  n_Ce && sublat_3 < n_Ce4) || (sublat_1 >= n_Ce4 && sublat_2 < n_Ce4 && sublat_3 < n_Ce4))) ;{
           //Loop over possible occupants for site that can change
           const auto &possible_1 = site_exch.possible_swap()[sublat_1][current_occupant_1];
           const auto &possible_2 = site_exch.possible_swap()[sublat_2][current_occupant_2];

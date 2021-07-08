@@ -16,9 +16,7 @@ else
   conda create -c prisms-center -c defaults -c conda-forge -y -n $CASM_ENV_NAME \
     "python =$CASM_PYTHON_VERSION" \
     "casm-boost-cpp17 =$CASM_BOOST_VERSION $CASM_BOOST_CONDAGCC_BUILD_STR" \
-    "gcc_linux-64 =$CASM_CONDAGCC_VERSION" \
-    "gxx_linux-64 =$CASM_CONDAGCC_VERSION" \
-    "gfortran_linux-64 =$CASM_CONDAGCC_VERSION" \
+    compilers \
     "m4 >=1.4.18" \
     autoconf \
     automake \

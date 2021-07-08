@@ -2,6 +2,7 @@
 #define CLEXBASIS_HH
 
 #include <string>
+#include <memory>
 
 #include "casm/basis_set/BasisSet.hh"
 #include "casm/casm_io/json/jsonParser.hh"

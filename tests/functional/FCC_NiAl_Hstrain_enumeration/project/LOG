@@ -1,0 +1,42 @@
+# 2021-07-05 22:25:14
+# darnoc@darnoc-Gazelle
+# --help-lboost_system**--std=c++17--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib64-1.1.2
+/home/darnoc/CASMcode/.libs/ccasm composition --calc 
+# return: 0 runtime(s): 0.00613198
+
+# 2021-07-05 22:25:14
+# darnoc@darnoc-Gazelle
+# --help-lboost_system**--std=c++17--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib64-1.1.2
+/home/darnoc/CASMcode/.libs/ccasm composition -s 1 
+# return: 0 runtime(s): 0.0102699
+
+# 2021-07-05 22:25:14
+# darnoc@darnoc-Gazelle
+# --help-lboost_system**--std=c++17--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib64-1.1.2
+/home/darnoc/CASMcode/.libs/ccasm enum -m ScelEnum --max 4 
+# return: 0 runtime(s): 0.0247063
+
+# 2021-07-05 22:25:14
+# darnoc@darnoc-Gazelle
+# --help-lboost_system**--std=c++17--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib64-1.1.2
+/home/darnoc/CASMcode/.libs/ccasm enum -m ConfigEnumAllOccupations --all 
+# return: 0 runtime(s): 0.0172713
+
+# 2021-07-05 22:25:14
+# darnoc@darnoc-Gazelle
+# --help-lboost_system**--std=c++17--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib64-1.1.2
+/home/darnoc/CASMcode/.libs/ccasm select --set-on 
+# return: 0 runtime(s): 0.0187239
+
+# 2021-07-05 22:25:14
+# darnoc@darnoc-Gazelle
+# --help-lboost_system**--std=c++17--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib64-1.1.2
+/home/darnoc/CASMcode/.libs/ccasm query -k scel_size comp_n point_group_name multiplicity 
+# return: 0 runtime(s): 0.0385891
+
+# 2021-07-05 22:25:14
+# darnoc@darnoc-Gazelle
+# --help-lboost_system**--std=c++17--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib--with-boost-libdir=/usr/lib64-1.1.2
+/home/darnoc/CASMcode/.libs/ccasm sym --dof-space-analysis --dofs Hstrain --confignames SCEL4_2_2_1_1_1_0/0 
+# return: 0 runtime(s): 0.145302
+

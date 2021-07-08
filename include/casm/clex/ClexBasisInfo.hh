@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <memory>
 
 #include "casm/clusterography/IntegralCluster_impl.hh"
 #include "casm/crystallography/UnitCellCoord.hh"

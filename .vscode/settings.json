@@ -1,0 +1,4 @@
+{
+    "cmake.generator": "Unix Makefiles",
+    "cmake.configureSettings": { "BOOST_ROOT": "/usr/include/boost"}
+}

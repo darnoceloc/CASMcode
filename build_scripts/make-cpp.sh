@@ -5,10 +5,9 @@ detect_os
 
 check_var "CASM_BUILD_DIR" "CASMcode repository location"
 check_var "CASM_BOOST_PREFIX" "Boost libraries location"
-check_var "CASM_BASH_COMPLETION_DIR" "Location to install CASM bash_completion script"
 check_var "CASM_CONFIGFLAGS" "configure options"
 check_var "CASM_CXXFLAGS" "Compiler flags" "-O3 -Wall -fPIC --std=c++17 -DNDEBUG -Wno-deprecated-register -Wno-ignored-attributes -Wno-deprecated-declarations"
-check_var "CASM_LDFLAGS" "Linker flags" ""
+check_var "CASM_LDFLAGS" "Linker flags" "-L/usr/lib/x86_64-linux-gnu"
 check_var "CASM_CC" "C compiler" ${CC:-"cc"}
 check_var "CASM_CXX" "C++ compiler" ${CXX:-"c++"}
 check_var "CASM_PYTHON" "Python interpreter" ${PYTHON:-"python"}

@@ -3,7 +3,7 @@
 # Assumes you've got installed:
 #   curl, bzip2
 
-CASM_CONDA_DIR="$HOME/.local/conda"
+CASM_CONDA_DIR="$HOME/anaconda3"
 CASM_PYTHON_VERSION="3"
 BUILD_DIR=/tmp
 

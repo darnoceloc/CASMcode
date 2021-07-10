@@ -11,7 +11,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "/usr/include/boost"
+			"value" : "/home/darnoc/anaconda3/envs/casm_dev/lib"
 		},
 		{
 			"name" : "BUILD_SHARED_LIBS",
@@ -1651,7 +1651,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "[/usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0/BoostConfig.cmake][c ][v1.71.0(1.71.0)]"
+			"value" : "[/usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0/BoostConfig.cmake][c ][v1.71.0(1.66.0)]"
 		},
 		{
 			"name" : "GITCOMMAND",

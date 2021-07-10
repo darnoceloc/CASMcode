@@ -1,4 +1,4 @@
 {
     "cmake.generator": "Unix Makefiles",
-    "cmake.configureSettings": { "BOOST_ROOT": "/usr/include/boost"}
+    "cmake.configureSettings": { "BOOST_ROOT": "/home/darnoc/anaconda3/envs/casm_dev/lib"}
 }

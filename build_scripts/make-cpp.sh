@@ -7,10 +7,10 @@ check_var "CASM_BUILD_DIR" "CASMcode repository location"
 check_var "CASM_BOOST_PREFIX" "Boost libraries location"
 check_var "CASM_CONFIGFLAGS" "configure options"
 check_var "CASM_CXXFLAGS" "Compiler flags" "-O3 -Wall -fPIC --std=c++17 -DNDEBUG -Wno-deprecated-register -Wno-ignored-attributes -Wno-deprecated-declarations"
-check_var "CASM_LDFLAGS" "Linker flags" "-L/usr/lib/x86_64-linux-gnu"
-check_var "CASM_CC" "C compiler" ${CC:-"cc"}
-check_var "CASM_CXX" "C++ compiler" ${CXX:-"c++"}
-check_var "CASM_PYTHON" "Python interpreter" ${PYTHON:-"python"}
+check_var "CASM_LDFLAGS" "Linker flags" ""
+check_var "CASM_CC" "C compiler" ${CC:-"/usr/bin/gcc"}
+check_var "CASM_CXX" "C++ compiler" ${CXX:-"/usr/bin/g++"}
+check_var "CASM_PYTHON" "Python interpreter" "/home/darnoc/anaconda3/envs/casm_dev/bin/python"
 check_var "CASM_NCPU" "Compiler -j option" 2
 check_var "CASM_MAKE_OPTIONS" "Options to give 'make'" ""
 
@@ -34,9 +34,9 @@ fi
 
 # C++ and CLI
 if ! [ -f ./configure ]; then
-  $CASM_PYTHON make_Makemodule.py \
+  /home/darnoc/anaconda3/envs/casm_dev/bin/python make_Makemodule.py \
     && ./bootstrap.sh \
-    && ./configure CXXFLAGS="${CASM_CXXFLAGS}" CC="$CASM_CC" CXX="$CASM_CXX" PYTHON="$CASM_PYTHON" LDFLAGS="${CASM_LDFLAGS}" ${CASM_CONFIGFLAGS} \
+    && ./configure --prefix=/home/darnoc/anaconda3/envs/casm_dev CXXFLAGS="${CASM_CXXFLAGS}" CC="$CASM_CC" CXX="$CASM_CXX" PYTHON="$CASM_PYTHON" LDFLAGS="${CASM_LDFLAGS}" ${CASM_CONFIGFLAGS} \
     || { echo "configuration failed"; exit 1; }
 else
   echo "'configure' already exists; continuing... (delete it to re-configure)"

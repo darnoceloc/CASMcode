@@ -6,14 +6,14 @@
                 "${workspaceFolder}/**",
                 "/home/darnoc/CASMcode",
                 "/home/darnoc/anaconda3",
-                "/usr/lib/x86_64-linux-gnu",
-                "/usr/include/boost"
+                "/home/darnoc/anaconda3/envs/casm_dev/lib",
+                ""
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "linux-gcc-x64",
+            "intelliSenseMode": "linux-gcc-x86",
             "configurationProvider": "go2sh.cmake-integration"
         }
     ],

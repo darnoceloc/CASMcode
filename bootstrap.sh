@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python3 ./make_Makemodule.py
+/home/darnoc/anaconda3/envs/casm_dev/bin/python make_Makemodule.py
 
 if [ ! $# -eq 0  ]; then
     echo "Applying specified tag to version string: $1"

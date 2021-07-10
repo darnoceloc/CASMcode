@@ -39,7 +39,7 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(/home/darnoc/CASMcode/include)
 
-find_package(Boost 1.71.0)
+find_package(Boost 1.66.0)
 if (Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
   link_directories(${Boost_LIBRARY_DIRS})

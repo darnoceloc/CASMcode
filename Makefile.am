@@ -17,7 +17,7 @@ TESTS=
 
 #===========================================================#
 #Define flags for everything ever
-TXT_VERSION:=$(shell cat $(top_srcdir)/casm_version.txt)
+TXT_VERSION = 1.1.2
 
 AM_CXXFLAGS = -DTXT_VERSION='"$(TXT_VERSION)"'\
 			  -DEIGEN_DEFAULT_DENSE_INDEX_TYPE=long\
@@ -33,7 +33,6 @@ AM_CPPFLAGS = -I$(srcdir)/include/casm/external/qhull/libqhull_r/\
 			  -I$(srcdir)/include/casm/external/qhull/libqhullcpp
 			  $(BOOST_CPPFLAGS)
 
-AM_LDFLAGS = $(BOOST_LDFLAGS)
 
 BUILT_SOURCES=
 

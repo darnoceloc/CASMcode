@@ -3,11 +3,13 @@
 
 ### initialization - shouldn't need to touch
 set -e
-export CASM_BUILD_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+export CASM_BUILD_DIR=/home/darnoc/CASMcode
 . $CASM_BUILD_DIR/build_scripts/install-functions.sh
-detect_os
+export CASM_OS_NAME=linux
 check_var "CONDA_PREFIX" "Must have the conda environment activated"
+export CONDA_PREFIX=/home/darnoc/anaconda3/envs/casm_dev
 export CASM_PREFIX=$CONDA_PREFIX
+export CASM_BOOST_PREFIX=$CONDA_PREFIX
 
 ### end initialization ###
 
@@ -31,3 +33,4 @@ if [[ "$CASM_OS_NAME" == "osx" ]]; then
   install_name_tool -add_rpath "$CASM_PREFIX/lib" "$CASM_PREFIX/bin/ccasm" \
     || { echo "  already set"; }
 fi
+pip install casm-python
